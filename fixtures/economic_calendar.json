@@ -1,0 +1,30 @@
+[
+  {
+    "name": "US CPI (Consumer Price Index) YoY",
+    "minutes_from_now": 45,
+    "high_risk": true,
+    "country": "US",
+    "importance": 3
+  },
+  {
+    "name": "US Initial Jobless Claims",
+    "minutes_from_now": 300,
+    "high_risk": false,
+    "country": "US",
+    "importance": 2
+  },
+  {
+    "name": "US Nonfarm Payrolls (NFP)",
+    "minutes_from_now": 2880,
+    "high_risk": true,
+    "country": "US",
+    "importance": 3
+  },
+  {
+    "name": "FOMC Interest Rate Decision",
+    "minutes_from_now": 5040,
+    "high_risk": true,
+    "country": "US",
+    "importance": 3
+  }
+]

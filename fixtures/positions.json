@@ -1,0 +1,32 @@
+[
+  {
+    "code": "US.GLD",
+    "name": "SPDR Gold Shares",
+    "direction": "LONG",
+    "qty": 12,
+    "cost": 231.4,
+    "last": 264.2087,
+    "prev_close": 262.1118,
+    "currency": "USD"
+  },
+  {
+    "code": "US.AAPL",
+    "name": "Apple Inc.",
+    "direction": "LONG",
+    "qty": 5,
+    "cost": 233.1,
+    "last": 212.8132,
+    "prev_close": 208.436,
+    "currency": "USD"
+  },
+  {
+    "code": "US.SPY",
+    "name": "SPDR S&P 500 ETF",
+    "direction": "LONG",
+    "qty": 1,
+    "cost": 540.0,
+    "last": 644.3055,
+    "prev_close": 646.8931,
+    "currency": "USD"
+  }
+]

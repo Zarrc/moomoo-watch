@@ -1,0 +1,20 @@
+[
+  {
+    "code": "US.GLD",
+    "name": "SPDR Gold Shares",
+    "last": 264.2087,
+    "prev_close": 262.1118
+  },
+  {
+    "code": "US.SPY",
+    "name": "SPDR S&P 500 ETF",
+    "last": 644.3055,
+    "prev_close": 646.8931
+  },
+  {
+    "code": "US.AAPL",
+    "name": "Apple Inc.",
+    "last": 212.8132,
+    "prev_close": 208.436
+  }
+]

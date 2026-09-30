@@ -1,0 +1,113 @@
+# ============================================================================
+# moomoo-watch 配置（示例）
+#
+# 用法：复制成 config.yaml 再改 —— `cp config.example.yaml config.yaml`
+#       （真实的 config.yaml 已被 .gitignore 排除，不会进仓库）
+#
+# 原则：全参数外部化 —— 改行为只改这里，不改代码。
+# 密钥例外：SendKey / Token / 交易密码一律走环境变量，绝不写进本文件。
+# ============================================================================
+
+# --- 运行模式 ---------------------------------------------------------------
+mode: simulate            # simulate = 不真发推送（只写日志） | live = 真发
+source: fixture           # fixture = 用本地样例跑通全链路，不连 OpenD | futu = 连 OpenD
+
+# --- moomoo / OpenD ---------------------------------------------------------
+moomoo:
+  host: "127.0.0.1"       # 以你自己的 OpenD.xml 为准，默认 11111
+  port: 11111
+  # 🚩 关键：security_firm 决定你能看到哪些账户。
+  #    留空 = 自动遍历候选（FUTUMY → FUTUSECURITIES → …），优先实盘账户 —— 推荐留空。
+  #    已知实例：Moomoo MY 客户传 FUTUSECURITIES 只会看到模拟盘，必须 FUTUMY 才见实盘。
+  security_firm: ""       # "" = 自动探测 | 或显式指定 FUTUMY / FUTUSECURITIES / FUTUINC / FUTUSG …
+  account_market: "US"    # 从哪个市场的账户上下文取账户：US / HK / MY / SG …
+                          # 注意这是「看哪个市场的账户」，不是账户归属地
+  markets: ["US"]         # 行情市场：US / HK / CN / SG / MY / JP（SG/MY/JP 官方支持说法有冲突，见 skill）
+  watchlist:              # 自选股，格式 <市场>.<代码>（换成你自己的）
+    - "US.SPY"
+    - "US.QQQ"
+    - "US.GLD"
+
+# --- 风险口径 ---------------------------------------------------------------
+risk:
+  equity: 10000.0         # 账户净值；仅 fixture 模式用，live 模式从 OpenD 读
+  max_position_pct: 0.35  # 单一持仓市值 / 总净值 超过此比例 → 告警
+  stale_data_minutes: 30  # 数据包年龄超过此值 → 在简报开头标「数据过期」
+
+# --- 指标参数（全部由脚本计算，子代理不自己算） ------------------------------
+indicators:
+  kline: "K_60M"          # K_30M / K_60M / K_DAY
+  max_count: 200          # 至少 200 根，够算 MA50 + ATR14
+  ma_period: 50
+  atr_period: 14
+  rsi_period: 14
+  volume_avg_period: 20
+
+# --- 宏观事件日历 -----------------------------------------------------------
+calendar:
+  enabled: true
+  alert_window_minutes: 60  # 预警窗口**上界**：事件前多少分钟内进入预警
+  alert_min_lead_minutes: 5 # 预警窗口**下界**：太临门（甚至已到点）就别报了，白烧额度
+  lookahead_days: 10        # 往后看几天（超出不取）
+  past_minutes: 120         # 刚过去的事件仍保留多久（便于复盘当日已公布数据）
+  max_pages: 6              # 翻页上限：接口单页固定 50 条且**按重要性排序**，不翻页会看不到未来事件
+  max_items: 40             # 塞进数据包的上限（截断时优先保留未来高险事件）
+  high_risk_keywords: ["CPI", "PPI", "NFP", "Nonfarm", "FOMC", "Interest Rate",
+                       "GDP", "PCE", "Unemployment", "Retail Sales"]
+
+# --- 新闻 / 公告 ------------------------------------------------------------
+news:
+  enabled: true
+  endpoint: "https://ai-news-search.moomoo.com/news_search"  # 无需 key（2026-09-30 实测 code:0）
+  lang: "en"              # zh-CN / zh-HK / en
+  news_type: 1            # 1 新闻 | 2 公告 | 3 研报
+  per_keyword: 8          # 每个关键词取几条（接口上限 50）
+  max_items: 12           # 数据包里最多保留几条
+  # 关键词留空则用「持仓 + 自选股」的代码自动生成
+  keywords: []
+
+# --- 推送 -------------------------------------------------------------------
+push:
+  # --- 按优先级分流 ---------------------------------------------------------
+  # 思路：额度稀缺的渠道留给不紧急的事；时间敏感的直接走快渠道。
+  # 路由值必须是下面 channels 里声明过的渠道名。
+  routing:
+    high: telegram        # 时间敏感（高危预警）→ 走 Telegram（免费无上限、正文完整）
+    normal: serverchan    # 常规简报 → 走微信（每天仅 5 条，省着用）
+
+  fallback: true          # 路由渠道失败时，按 channels 声明顺序降级重试
+  timeout_seconds: 15
+  cooldown_minutes: 30    # 同标题冷却
+  high_priority_bypass: true   # high 允许突破冷却（仍受各自渠道日限额约束）
+
+  # --- 渠道细则（限额必须分渠道！）-----------------------------------------
+  # ⚠️ 把 max_per_day 写成全局值会让 Server酱 的 5 条/天卡死 Telegram 的推送，
+  #    那样「按优先级分流」就完全失去意义了。
+  channels:
+    serverchan:
+      max_per_day: 5      # Server酱免费版硬上限
+      env_key: "SERVERCHAN_SENDKEY"
+    telegram:
+      max_per_day: 0      # 0 = 不限
+      env_token: "TELEGRAM_BOT_TOKEN"
+      env_chat: "TELEGRAM_CHAT_ID"
+    pushplus:
+      max_per_day: 0
+      env_key: "PUSHPLUS_TOKEN"
+
+# --- 子代理（把数据包变成简报的那一步） --------------------------------------
+agent:
+  enabled: true
+  claude_exe: "C:\\Users\\thoma\\.local\\bin\\claude.exe"
+  agent_name: "portfolio-watch"
+  permission_mode: "acceptEdits"   # ⚠️ 不可省：只靠 agent 文件的字段在 --agent 下写不出文件
+  model: ""                        # 留空不传 --model；建议钉死一个以稳定成本
+  timeout_seconds: 300
+
+# --- 路径（相对本目录） ------------------------------------------------------
+paths:
+  data: "data"            # 脚本写、子代理读
+  outbox: "outbox"        # 子代理写、脚本读
+  logs: "logs"
+  state: "state.json"
+  fixtures: "fixtures"
