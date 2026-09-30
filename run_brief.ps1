@@ -1,4 +1,4 @@
-<#
+﻿<#
     run_brief.ps1 —— 计划任务调这个，不直接调 python。
 
     为什么需要这层包装：
@@ -27,19 +27,47 @@ $env:PYTHONUTF8       = '1'          # Python 3.7+ 的全局 UTF-8 模式
 $proj = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $proj
 
-# Python 解释器：优先用环境变量 MOOMOO_WATCH_PYTHON，否则从 PATH 里找。
-# （写死绝对路径的话，换台机器就跑不了 —— 本脚本要能跟着仓库走。）
+# --- Python 解释器定位 -------------------------------------------------------
+# 🚩🚩 这里有个**静默失败陷阱**（2026-09-30 实踩，代价：退出码 0 但一行输出都没有）：
+#   Windows 自带的 `%LOCALAPPDATA%\Microsoft\WindowsApps\python.exe` 是**应用商店存根** ——
+#   它运行时不报错、不输出、**退出码 0**。`Get-Command python` 会优先命中它，
+#   于是计划任务每次都「成功」地什么都没干，而且从不报错。
+#   所以：**必须显式排除 WindowsApps，并真的问一句 --version 确认它是真 Python。**
+
+function Test-RealPython([string]$exe) {
+    if (-not $exe) { return $false }
+    if (-not (Test-Path $exe)) { return $false }
+    if ($exe -match '\\WindowsApps\\') { return $false }   # 商店存根，直接毙掉
+    try {
+        $v = & $exe --version 2>&1
+        return ("$v" -match '^Python 3')
+    } catch { return $false }
+}
+
 $py = $env:MOOMOO_WATCH_PYTHON
-if (-not $py -or -not (Test-Path $py)) {
+if (-not (Test-RealPython $py)) {
+    $py = $null
+    $candidates = @()
     foreach ($cand in @('python', 'python3', 'py')) {
         $c = Get-Command $cand -ErrorAction SilentlyContinue
-        if ($c) { $py = $c.Source; break }
+        if ($c) { $candidates += $c.Source }
+    }
+    # 再兜几个常见安装位置（用户级 winget 装法就是第一个）
+    $candidates += @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'),
+        (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python311\python.exe'),
+        'C:\Python312\python.exe',
+        'C:\Python311\python.exe'
+    )
+    foreach ($cand in $candidates) {
+        if (Test-RealPython $cand) { $py = $cand; break }
     }
 }
-if (-not $py -or -not (Test-Path $py)) {
-    Write-Error "找不到 Python 解释器。请装 Python 3.10+，或设置环境变量 MOOMOO_WATCH_PYTHON。"
+if (-not $py) {
+    Write-Error "找不到可用的 Python 3.10+。（注意：WindowsApps 里那个是商店存根，不是真 Python。）请安装 Python，或把解释器绝对路径写进环境变量 MOOMOO_WATCH_PYTHON。"
     exit 1
 }
+Write-Host "使用 Python: $py"
 
 # ⚠️ 不能叫 $args —— 那是 PowerShell 自动变量，赋值会直接报错
 $pyArgs = @('main.py', '--trigger', $Trigger)
