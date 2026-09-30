@@ -91,9 +91,13 @@ def main() -> int:
     # 启动自检：缺密钥只警告，不拦（simulate 模式不需要密钥）
     if cfg.live_push:
         missing = cfg.missing_secrets()
-        if missing:
-            log.error("live 模式缺少密钥 %s —— 推送会全部失败。", missing)
-            log.error("请把 %s 写进 %s", missing, cfg.env_path)
+        ready = [c for c in notifier.declared_channels(cfg) if notifier.channel_ready(cfg, c)]
+        if not ready:
+            # 一个都没配好 → 真会全失败
+            log.error("live 模式：没有任何渠道配好密钥，推送会全部失败。缺失 %s", missing)
+        elif missing:
+            # 有渠道缺密钥，但有别的可用 → 会降级，不是错误
+            log.warning("以下渠道缺密钥，会被降级跳过：%s；本次可用渠道：%s", missing, ready)
 
     # 1) 取数 + 补算
     raw = market.collect(cfg)

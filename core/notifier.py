@@ -149,6 +149,15 @@ def resolve_channel(cfg, priority: str) -> str | None:
     return chans[0] if chans else None
 
 
+def channel_ready(cfg, name: str) -> bool:
+    """该渠道的密钥是否齐了。"""
+    spec = (cfg.get("push.channels") or {}).get(name) or {}
+    for key, env_name in spec.items():
+        if key.startswith("env_") and env_name and not cfg.secret(env_name):
+            return False
+    return True
+
+
 def missing_secrets(cfg) -> List[str]:
     """列出所有渠道缺失的密钥名（不打印值），供启动自检。"""
     env_cfg = cfg.get("push.channels") or {}
