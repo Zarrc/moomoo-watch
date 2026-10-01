@@ -10,7 +10,7 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +25,9 @@ _SCHEMA = {
         "trigger": ["brief", "alert", "ask"],
         "ma_slope": ["up", "down", "flat", None],
         "price_vs_ma": ["above", "below", "equal", None],
+        # 预测块取值域（见 rollup.py / 子代理契约）——写超出域的值会被脚本拒收
+        "call_direction": ["up", "down", "flat"],
+        "call_invalidation_type": ["close_below", "close_above"],
     },
     "units": {
         "weight": "市值 / 净值，小数（0.38 = 38%）",
@@ -32,7 +35,13 @@ _SCHEMA = {
         "distance_in_atr": "价格距 MA 的 ATR 倍数",
         "minutes_until": "距今分钟数，负值 = 已过去",
         "volume_ratio": "最新量 / 前 20 根均量",
+        "fed_probability": "0–1 的小数（加息/按兵/降息概率）",
     },
+    "calendar_fields": ["name", "at", "minutes_until", "high_risk", "country", "importance",
+                        "actual", "forecast", "prior"],
+    "macro_note": "macro 为宏观快照：fed_watch（目标利率 + 加息/按兵/降息概率，主刻度）· "
+                  "dot_plot · indicators · series。`macro._fixture=true` 表示**样例数据**，"
+                  "任何输出必须据此标注「样例数据」，绝不当作真实数据。取不到的子键为 null 或 {}。",
     "note": "所有数字均由脚本算好。字段缺失即为「脚本没取到」，不要推测、不要估算。",
 }
 
@@ -125,8 +134,9 @@ def _build_alerts(cfg, enriched: Dict[str, Any], events: List[Dict[str, Any]],
 
 
 def build(cfg, *, trigger: str, market: Dict[str, Any], events: List[Dict[str, Any]],
-          news_items: List[Dict[str, Any]]) -> Dict[str, Any]:
-    now = datetime.now(CST)
+          news_items: List[Dict[str, Any]], macro: Optional[Dict[str, Any]] = None,
+          now: Optional[datetime] = None) -> Dict[str, Any]:
+    now = now or datetime.now(CST)
     generated = now.isoformat(timespec="seconds")
     data_asof = market.get("asof") or generated
 
@@ -155,6 +165,8 @@ def build(cfg, *, trigger: str, market: Dict[str, Any], events: List[Dict[str, A
         "watchlist": market.get("watchlist") or [],
         "calendar": events,
         "news": news_items,
+        # 宏观快照（附加式，旧契仍有效）：fed_watch 为「主刻度」
+        "macro": macro or {},
         "alerts": alerts,
     }
 

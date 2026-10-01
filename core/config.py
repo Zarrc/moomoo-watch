@@ -19,6 +19,20 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_ENV_PATH = Path.home() / ".moomoo-watch" / ".env"
 
 
+def find_vault_root(start: Path | None = None) -> Path:
+    """从本文件（或其父目录）往上找含 `.claude` 的目录 = vault 根。
+
+    ⚠️ **这是全库唯一的「vault 根」解析器** —— `summarize._vault_root()` 也调它。
+    为什么只能有一份：不用数 parent 层数（路径深度改一次就得重数，数错是**静默的**：
+    子代理 cwd 错了 → 相对路径全错 → 还 exit 0）。往上找锚点更稳，而且只此一处。
+    """
+    node = (start or Path(__file__).resolve().parent).resolve()
+    for parent in (node, *node.parents):
+        if (parent / ".claude").is_dir():
+            return parent
+    raise RuntimeError("找不到 vault 根（往上没有 .claude 目录）—— 项目是否被移动了？")
+
+
 def _load_dotenv(path: Path) -> Dict[str, str]:
     """极简 .env 解析：KEY=VALUE，支持 # 注释与引号。不覆盖已存在的真实环境变量。"""
     out: Dict[str, str] = {}
@@ -62,12 +76,31 @@ class Config:
 
     # -- 路径 ----------------------------------------------------------------
     def path_for(self, key: str, create: bool = False) -> Path:
+        """项目内路径：相对 `PROJECT_ROOT`（本仓库目录）。"""
         rel = self.get(f"paths.{key}")
         if rel is None:
             raise KeyError(f"config.paths.{key} 未定义")
         p = PROJECT_ROOT / rel
         if create:
             p.parent.mkdir(parents=True, exist_ok=True) if p.suffix else p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    def vault_root(self) -> Path:
+        """vault 根（含 `.claude` 的那层）。"""
+        return find_vault_root()
+
+    def vault_path_for(self, key: str, create: bool = False) -> Path:
+        """vault 内路径：相对 **vault 根**（不是项目根）。
+
+        `paths.vault_invest` 这类字段是「相对 vault 根」的 —— 落在用户个人区
+        `Self/投资/`，而不是项目目录里。别用 `path_for()` 取它，会取到项目内。
+        """
+        rel = self.get(f"paths.{key}")
+        if rel is None:
+            raise KeyError(f"config.paths.{key} 未定义")
+        p = self.vault_root() / rel
+        if create:
+            p.mkdir(parents=True, exist_ok=True)
         return p
 
     # -- 便捷只读属性 --------------------------------------------------------

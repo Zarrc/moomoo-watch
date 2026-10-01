@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import html
+import json
 import logging
 import re
 from datetime import datetime, timedelta, timezone
@@ -36,10 +37,53 @@ def _ts_to_iso(raw: Any) -> str | None:
         return None
 
 
+def _from_fixture(cfg, keywords: List[str]) -> List[Dict[str, Any]]:
+    """读 `fixtures/news.json` —— 让 `--source fixture` 真正**离线**。
+
+    🚩 为什么必须补这个分支：在此之前 `--source fixture` 下 `fetch()` **照样发真 HTTP 请求**
+    —— 于是「离线自检」实为「无 OpenD 但有网」，网络一抖结果就变，且离线环境直接空。
+    现在 fixture 源只读本地文件，全链路确定性可复现。
+    """
+    path = cfg.path_for("fixtures") / "news.json"
+    if not path.is_file():
+        log.warning("fixture 新闻不存在：%s", path)
+        return []
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        log.warning("fixture 新闻读取失败：%s", exc)
+        return []
+
+    kws = [str(k).lower() for k in keywords]
+    max_items = int(cfg.get("news.max_items", 12))
+    out: List[Dict[str, Any]] = []
+    for i, row in enumerate(rows):
+        title = _clean(row.get("title", ""))
+        explicit = [str(k).lower() for k in (row.get("keywords") or [])]
+        hit_kw = next((k for k in kws if k in title.lower() or k in explicit), None)
+        if kws and hit_kw is None:
+            continue
+        out.append({
+            "id": str(row.get("id") or f"fx{i}"),
+            "title": title,
+            "url": row.get("url"),
+            "published_at": row.get("published_at"),
+            "news_type": row.get("news_type", 1),
+            "matched_keyword": hit_kw,
+        })
+    out.sort(key=lambda x: x.get("published_at") or "", reverse=True)
+    log.info("新闻（fixture）：关键词 %d → 命中 %d 条，保留 %d 条",
+             len(keywords), len(out), min(max_items, len(out)))
+    return out[:max_items]
+
+
 def fetch(cfg, keywords: List[str]) -> List[Dict[str, Any]]:
     """按关键词抓新闻，按 news_id 去重，返回统一格式的条目列表。"""
     if not cfg.get("news.enabled", True) or not keywords:
         return []
+
+    if cfg.source == "fixture":
+        return _from_fixture(cfg, keywords)
 
     endpoint = cfg.get("news.endpoint")
     lang = cfg.get("news.lang", "en")

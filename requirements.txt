@@ -1,3 +1,8 @@
 futu-api>=10.11
+# 🚩 pandas 是 futu-api 的**硬依赖**：SDK 的返回值就是 DataFrame，
+#    `market.py` / `calendar.py` 都调 `.iterrows()` / `.to_dict("records")`。
+#    不显式声明时，干净环境 `pip install -r requirements.txt` 会装不上 pandas →
+#    `import futu` 直接失败 → 整条管道静默降级。2026-10-02 补。
+pandas>=2.0
 PyYAML>=6.0
 requests>=2.31

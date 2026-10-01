@@ -51,6 +51,11 @@ def _normalize(raw: Dict[str, Any], kws: List[str], now: datetime) -> Dict[str, 
         "high_risk": _kw_hit(name, kws),
         "country": raw.get("country") or raw.get("region"),
         "importance": raw.get("importance") or raw.get("star"),
+        # 已公布数据的「实际值」——多周期报告要复盘「上期实际 vs 预期」。
+        # 取不到一律 None（脚本不编数）；字段名以 OpenD 返回为准（prior 兼容 previous）。
+        "actual": raw.get("actual"),
+        "forecast": raw.get("forecast"),
+        "prior": raw.get("prior") if raw.get("prior") is not None else raw.get("previous"),
     }
 
 
@@ -77,6 +82,10 @@ def _from_fixture(cfg, now: datetime) -> List[Dict[str, Any]]:
             "high_risk": bool(row.get("high_risk")),
             "country": row.get("country", "US"),
             "importance": row.get("importance"),
+            # 与 _normalize 同步（契约三字段）：缺则 None
+            "actual": row.get("actual"),
+            "forecast": row.get("forecast"),
+            "prior": row.get("prior"),
         })
     return out
 
