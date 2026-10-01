@@ -26,14 +26,21 @@
                    去重 / 冷却 / 分渠道限额 ──▶ Telegram / Server酱 ──▶ 手机
 ```
 
-### ⚠️ 「大脑」那一层需要你自己准备
+### 🧠 「大脑」那一层：带一份参考实现
 
-本仓库**只含「身体」**。程序通过 `claude --agent <名字>` 调起一个子代理，
-**那个子代理的定义文件不在本仓库里** —— 你需要自备，或者把它关掉。
+程序通过 `claude --agent <名字>` 调起一个子代理来完成「怎么写、写什么」这部分。
 
-- 自备：写一个 `.claude/agents/<名字>.md`，约定见下方「数据包契约」
-- 关掉：`config.yaml` 里设 `agent.enabled: false` —— 但那样流水线会停在数据包，
-  **不会产生推送**（推送内容由子代理写）
+**本仓库带一份参考版**：[`agents/portfolio-watch.md`](agents/portfolio-watch.md)
+—— 那是可直接用（也可直接改）的子代理定义，含数据包契约、四种模式
+（`brief` / `alert` / `ask` / `report`）、候选筛选规则与硬性护栏。**把它当模板读，别当黑箱用。**
+
+- **装它**：复制到你的 Claude Code 项目（一般是 vault 根，即含 `.claude/` 的那层）的
+  `.claude/agents/portfolio-watch.md`；名字要与 `config.yaml` 的 `agent.agent_name` 一致。
+  详见 [`SETUP.md`](SETUP.md) 第 5 步。
+- **不用它**：`config.yaml` 里设 `agent.enabled: false` —— 但那样流水线会停在数据包，
+  **不会产生推送**（推送内容由子代理写）。
+
+> ⚠️ 参考版里凡是 🔧 标了的地方（报告区路径、`claude` 可执行文件位置等）都要按你的实际情况改。
 
 调起命令里 **`--permission-mode acceptEdits` 不能省**：子代理文件里的
 `permissionMode` 字段在 `--agent` 这条路径下**静默失效**，省了就写不出文件
@@ -48,13 +55,16 @@ python -m pip install -r requirements.txt
 # 2) 复制配置
 cp config.example.yaml config.yaml
 
-# 3) 跑一次离线自检 —— 不连 OpenD、不需要密钥，应该全绿
+# 3) 装上「大脑」：把参考子代理复制进你的 Claude Code 项目
+#    <你的 vault 根>/.claude/agents/portfolio-watch.md ← from agents/portfolio-watch.md
+
+# 4) 跑一次离线自检 —— 不连 OpenD、不需要密钥，应该全绿
 python main.py --source fixture --no-agent
 
-# 4) 密钥（放仓库外，别提交）
+# 5) 密钥（放仓库外，别提交）
 #    %USERPROFILE%\.moomoo-watch\.env  ← 详见 SETUP.md
 
-# 5) 连真 OpenD
+# 6) 连真 OpenD
 python main.py --source futu --no-agent    # 先只出数据包，核对数字
 python main.py --source futu --mode live   # 真发
 ```
@@ -96,6 +106,9 @@ python main.py --source futu --mode live   # 真发
 │   ├── state.py         # 去重 / 冷却 / 分渠道日限额
 │   ├── notifier.py      # Telegram / Server酱 / pushplus（非阻塞、失败降级、脱敏）
 │   └── summarize.py     # 调起子代理（brief / alert / ask / report）
+├── agents/              # 🧠 「大脑」：子代理定义（参考版，复制进你的 .claude/agents/）
+│   └── portfolio-watch.md
+├── docs/                # 分析框架等参考文档
 ├── tests/               # 单测（stdlib unittest）
 ├── fixtures/            # 离线样例（make_fixtures.py / make_rollup_fixtures.py 生成）
 │   ├── klines/          #  60M K 线（指标用）
@@ -126,7 +139,8 @@ python main.py --source futu --mode live   # 真发
 
 ## 数据包契约
 
-程序与子代理之间**只通过 `data/latest.json` 交互**。字段：
+程序与子代理之间**只通过 `data/` 下的 JSON 交互**：常规简报读 `data/latest.json`，
+周期报告另读 `data/report_<周期键>.json`（报告包）。字段：
 
 | 字段 | 内容 |
 |------|------|

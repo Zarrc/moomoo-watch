@@ -133,7 +133,9 @@ push:
 # --- 子代理（把数据包变成简报的那一步） --------------------------------------
 agent:
   enabled: true
-  claude_exe: "C:\\Users\\thoma\\.local\\bin\\claude.exe"
+  # 🔧 改成你本机 `claude` 可执行文件的**绝对路径**（计划任务只接受绝对路径）。
+  #    Windows 常见位置形如：C:\Users\<你的用户名>\.local\bin\claude.exe
+  claude_exe: "C:\\Users\\<你的用户名>\\.local\\bin\\claude.exe"
   agent_name: "portfolio-watch"
   permission_mode: "acceptEdits"   # ⚠️ 不可省：只靠 agent 文件的字段在 --agent 下写不出文件
   model: ""                        # 留空不传 --model；建议钉死一个以稳定成本
