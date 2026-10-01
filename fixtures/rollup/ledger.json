@@ -1,0 +1,132 @@
+{
+  "entries": [
+    {
+      "session_date": "2026-09-28",
+      "instrument": "US.SPY",
+      "direction": "up",
+      "key_levels": [
+        640.0
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 630.0
+      },
+      "confidence": 0.55,
+      "ref_close": 640.0,
+      "score": null,
+      "created_at": "2026-09-28T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-09-28",
+      "instrument": "US.GLD",
+      "direction": "up",
+      "key_levels": [
+        260.5
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 252.0
+      },
+      "confidence": 0.5,
+      "ref_close": 260.5,
+      "score": null,
+      "created_at": "2026-09-28T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-09-29",
+      "instrument": "US.SPY",
+      "direction": "down",
+      "key_levels": [
+        645.5
+      ],
+      "invalidation": {
+        "type": "close_above",
+        "level": 655.0
+      },
+      "confidence": 0.45,
+      "ref_close": 645.5,
+      "score": null,
+      "created_at": "2026-09-29T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-09-29",
+      "instrument": "US.GLD",
+      "direction": "up",
+      "key_levels": [
+        262.1
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 259.0
+      },
+      "confidence": 0.4,
+      "ref_close": 262.1,
+      "score": null,
+      "created_at": "2026-09-29T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-09-30",
+      "instrument": "US.GLD",
+      "direction": "flat",
+      "key_levels": [
+        258.4
+      ],
+      "invalidation": {
+        "type": "close_above",
+        "level": 270.0
+      },
+      "confidence": 0.35,
+      "ref_close": 258.4,
+      "score": null,
+      "created_at": "2026-09-30T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-10-01",
+      "instrument": "US.SPY",
+      "direction": "up",
+      "key_levels": [
+        647.9
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 635.0
+      },
+      "confidence": 0.55,
+      "ref_close": 647.9,
+      "score": null,
+      "created_at": "2026-10-01T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-10-01",
+      "instrument": "US.GLD",
+      "direction": "up",
+      "key_levels": [
+        263.7
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 255.0
+      },
+      "confidence": 0.6,
+      "ref_close": 263.7,
+      "score": null,
+      "created_at": "2026-10-01T06:30:00+08:00"
+    },
+    {
+      "session_date": "2026-10-02",
+      "instrument": "US.SPY",
+      "direction": "up",
+      "key_levels": [
+        644.31
+      ],
+      "invalidation": {
+        "type": "close_below",
+        "level": 630.0
+      },
+      "confidence": 0.52,
+      "ref_close": 644.31,
+      "score": null,
+      "created_at": "2026-10-02T06:30:00+08:00"
+    }
+  ]
+}

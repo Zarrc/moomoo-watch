@@ -1,0 +1,50 @@
+[
+  {
+    "id": "fx-fed-01",
+    "title": "Fed officials signal rate path hinges on sticky inflation",
+    "url": "https://example.invalid/news/fed-rate-path",
+    "published_at": "2026-10-02T21:10:00+08:00",
+    "news_type": 1,
+    "keywords": ["fed", "fomc", "rate"]
+  },
+  {
+    "id": "fx-gld-01",
+    "title": "Gold ETFs see steady inflows as real yields stall",
+    "url": "https://example.invalid/news/gld-inflows",
+    "published_at": "2026-10-02T18:40:00+08:00",
+    "news_type": 1,
+    "keywords": ["gold", "gld"]
+  },
+  {
+    "id": "fx-spy-01",
+    "title": "S&P 500 slips as oil tops $100 on supply concerns",
+    "url": "https://example.invalid/news/spy-oil",
+    "published_at": "2026-10-02T22:05:00+08:00",
+    "news_type": 1,
+    "keywords": ["spy", "s&p", "oil"]
+  },
+  {
+    "id": "fx-aapl-01",
+    "title": "Apple supplier guidance trims hardware outlook",
+    "url": "https://example.invalid/news/aapl-supplier",
+    "published_at": "2026-10-02T16:20:00+08:00",
+    "news_type": 1,
+    "keywords": ["aapl", "apple"]
+  },
+  {
+    "id": "fx-cpi-01",
+    "title": "US CPI print due next week; consensus sees core easing",
+    "url": "https://example.invalid/news/cpi-preview",
+    "published_at": "2026-10-02T09:15:00+08:00",
+    "news_type": 1,
+    "keywords": ["cpi", "inflation"]
+  },
+  {
+    "id": "fx-unrelated-01",
+    "title": "Local sports team wins regional championship",
+    "url": "https://example.invalid/news/none",
+    "published_at": "2026-10-02T12:00:00+08:00",
+    "news_type": 1,
+    "keywords": []
+  }
+]

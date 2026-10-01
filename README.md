@@ -66,10 +66,14 @@ python main.py --source futu --mode live   # 真发
 | `python main.py` | 按 `config.yaml` 跑一次 |
 | `python main.py --source fixture` | 用离线样例跑（不连 OpenD） |
 | `python main.py --mode live` | 真发推送（默认 `simulate` 只写日志） |
-| `python main.py --no-agent` | 只出数据包，不调子代理 |
+| `python main.py --no-agent` | 只出数据包/报告包，不调子代理 |
 | `python main.py --no-push` | 跑到出稿为止，不推送 |
 | `python main.py --ask "GLD 今天怎么样"` | 交互问答 |
 | `python main.py --trigger alert` | 强制走高危预警模式 |
+| `python main.py --rollup` | **多周期回滚**：日记录 + 预测评分 + 到期周期报告（并入常规简报） |
+| `python main.py --rebuild-scorecard` | 只从台账重算命中率（审计 / 幂等验证） |
+| `python main.py --rollup --seed-fixtures` | 离线验收：播种 fixture 日记录（不用等一周就能跑周报） |
+| `python -m unittest discover -s tests` | 跑单测（stdlib，无新依赖） |
 
 退出码：`0` = 正常（**含「没重要事不发」**）；`1` = 硬失败。
 
@@ -81,20 +85,29 @@ python main.py --source futu --mode live   # 真发
 ├── requirements.txt
 ├── run_brief.ps1        # Windows 计划任务包装（处理编码与路径）
 ├── core/
-│   ├── config.py        # 配置 + 密钥注入（密钥从仓库外读）
+│   ├── config.py        # 配置 + 密钥注入（密钥从仓库外读）+ vault 根解析
 │   ├── market.py        # 行情/持仓/账户（fixture 与 futu 两个源）
 │   ├── indicators.py    # MA / ATR / RSI / 量比 —— 纯 Python，不引入 pandas
-│   ├── calendar.py      # 宏观日历（翻页取全，含未来事件）
-│   ├── news.py          # moomoo 资讯 HTTP（无需 key）
+│   ├── calendar.py      # 宏观日历（翻页取全，含 future 事件 + 已公布实际值）
+│   ├── macro.py         # 宏观快照：美联储利率预期（主刻度）+ 指标历史
+│   ├── news.py          # moomoo 资讯 HTTP（无需 key；fixture 源读本地）
 │   ├── packet.py        # 组装数据包 —— 程序与子代理的唯一接口
+│   ├── rollup.py        # 多周期回滚：日记录 / 预测台账 / 打分 / 命中率 / 水位
 │   ├── state.py         # 去重 / 冷却 / 分渠道日限额
 │   ├── notifier.py      # Telegram / Server酱 / pushplus（非阻塞、失败降级、脱敏）
-│   └── summarize.py     # 调起子代理
-├── fixtures/            # 离线样例（由 make_fixtures.py 生成）
-├── data/                # ← 程序写，子代理读   ⚠️gitignore
-├── outbox/              # ← 子代理写，程序读   ⚠️gitignore
+│   └── summarize.py     # 调起子代理（brief / alert / ask / report）
+├── tests/               # 单测（stdlib unittest）
+├── fixtures/            # 离线样例（make_fixtures.py / make_rollup_fixtures.py 生成）
+│   ├── klines/          #  60M K 线（指标用）
+│   └── klines_daily/    #  日 K（回填用，~300 根）
+├── data/                # ← 程序写，子代理读：数据包 + 报告包  ⚠️gitignore
+├── outbox/              # ← 子代理写，程序读：手机推送稿       ⚠️gitignore
+├── rollup/              # ← 程序写：日记录 / 台账 / 命中率 / 水位 ⚠️gitignore
 └── logs/                # 按天滚动，留 30 天   ⚠️gitignore
 ```
+
+> 📄 **报告全文不在本仓库** —— 落在 vault 的 `Self/投资/{日评,周报,月报,季报,年报}/`（人读，可被 Obsidian 索引）。
+> 本仓库只保留**机器记录**（`rollup/`）与**手机短摘要**（`outbox/`）。
 
 ## 推送：按优先级分流
 
@@ -122,7 +135,8 @@ python main.py --source futu --mode live   # 真发
 | `account` | 净值、现金、**分币种**市值与盈亏、集中度、`totals_complete` |
 | `positions` | 代码 · 方向 · 数量 · 成本 · 现价 · 浮盈亏 · 权重 · `price_source` · `realtime_quote` |
 | `watchlist` | 现价 · 涨跌幅 · 量比 |
-| `calendar` | 名称 · 时间 · `minutes_until` · `high_risk` |
+| `calendar` | 名称 · 时间 · `minutes_until` · `high_risk` · **`actual` / `forecast` / `prior`**（已公布数据的实际/预期/前值，缺则 `null`） |
+| `macro` | **宏观快照**：`fed_watch`（目标利率 + 加息/按兵/降息概率，**主刻度**）· `dot_plot` · `indicators` · `series`。`macro._fixture=true` = 样例数据 |
 | `news` | 标题 · 来源 · 时间 · URL |
 | `alerts` | 程序已判定的**确定性**告警（阈值触发、数据过期、无行情权限…） |
 
@@ -136,6 +150,62 @@ title: ≤40 字，必须自包含
 ---
 正文……
 ```
+
+## 多周期回滚与预测台账
+
+原来每次运行都是**无状态**的：取数 → 写一份推送 → 忘掉。带时间戳的历史包没人回头读，
+于是只能回答「此刻怎么样」，回答不了「这一周 / 在这一月往哪走」。
+
+**三层汇总**（青铜 → 白银 → 黄金）：
+
+```
+L0  原始层   data/<时间戳>.json              已有：每次跑落一个
+                 ↓  确定性脚本压（不是 LLM）
+L1  日汇总   rollup/daily/YYYY-MM-DD.json    新建：日记录
+                 ↓
+L2  周期汇总 报告全文 → Self/投资/{日评,周报,月报,季报,年报}/
+             手机短摘要 → outbox/*.md        复用现有推送链路
+```
+
+**三条不可动摇的分工**：
+
+1. **数字 = 脚本，判断 = LLM。** LLM 只写 `{方向, 关键位, 失效条件, 置信度}`；
+   脚本填参考价、做 **100% 的打分**（`score_call` 是纯函数，见 `tests/test_rollup.py`）。
+2. **机器记录在项目内（`rollup/`，gitignore），人读报告在 vault（`Self/投资/`）。**
+   —— `rollup/daily/*.json` 含真实收盘与权重，本仓库是**公开**的，绝不能提交。
+3. **单一入口自己判断「该出什么」**（`due_periods` + 水位 `rollup/due.json`），不堆计划任务。
+
+### 可证伪预测（为什么预测没被「禁止」）
+
+本仓库立身之本是「只陈述状态、不编数字、不下指令」，预测本是被禁止的模式。**解法**：
+预测可以存在，但必须**可证伪、且由脚本自动打分**。
+
+- 每个交易日，子代理在 `Self/投资/日评/YYYY-MM-DD*.md` 里放一段
+  `<!-- CALL:BEGIN -->…<!-- CALL:END -->`，内嵌一个 `yaml` 的预测块。
+- **次日由脚本**（不是 LLM）取「下一个有该标的收盘的日记录」判对错，写进 `rollup/ledger.json`。
+- 累积成 `rollup/scorecard.json` 与 vault 里的 `Self/投资/预测台账/命中率.md`。
+
+**硬约束**（提示词**与**解析器两处都拦）：
+
+| 约束 | 为什么 |
+|------|--------|
+| 只能点 `rollup.call_instruments` 白名单（默认 `US.SPY` / `US.GLD`） | 多币种账户的「组合方向」无法定义；`MY.*` 拿不到行情无法打分；打分需干净收盘序列 |
+| `direction ∈ {up, down, flat}` · `invalidation.type ∈ {close_below, close_above}` · `confidence ∈ [0,1]` | 取值域限定，否则无法机判 |
+| 白名单外 / 越界的 call → **脚本丢弃**并记 `call_rejected` | 提示词级约束不够，解析器也要拦 |
+
+**边界情形（都要诚实处理，绝不静默丢弃）**：
+
+- 无下一条记录 → 留在 `pending`，**不编**；超 `max_score_lag_days` → `unscored_stale`
+- 未出预测 → `call_missing`；块损坏 → `call_parse_error`（**大声记日志**）
+- 以上排除项**计入 `coverage` 但不计入命中率分母**；`hit_rate` 在 `n==0` 时是 `null` 不是 `0`
+- **`scorecard` 完全由 `ledger.json` 派生** → `--rebuild-scorecard` 可重建，便于审计
+
+### 调度（单一入口）
+
+- **06:30 一次 `run_brief.ps1 -Rollup`**：常规简报 + 回滚汇总（哪个周期到期由水位判断）。
+- 30 分钟的高危预警任务**保持不动**（`-Trigger alert`，**绝不带 `-Rollup`**）。
+- 首跑保护：`rollup.bootstrap_mode: seed`（默认）→ 第一次只登记水位、只出 daily，
+  否则首跑会同时触发 5 个报告（5×900s + 打爆 Server酱 5 条/天）。
 
 ## 设计原则（踩过坑才写下的）
 
@@ -159,6 +229,12 @@ title: ≤40 字，必须自包含
   Moomoo MY 客户实测需 `FUTUMY` 才看得到实盘。
 - **交易默认走模拟环境**，切实际盘需二次确认 + 手动输密码（官方限制，无法全自动）。
 - **OpenD 必须常驻且已登录。** 登录态掉了 = 整条管道静默失败，程序每次会做端口探活。
+- **信用风险：无数据。** 分析框架（见 `docs/分析框架-传导链.md`）的**副刻度 = 信用风险**，
+  但**没有任何 API 来源** —— 一律写「无数据」，**绝不用代理指标（信用利差 / CDS / VIX）替代**。
+- **宏观接口字段名未在真机核对。** `macro.py` 的 `get_fed_watch_*` / `get_macro_indicator_history`
+  取值按「键名模糊匹配、找不到就留 `None`」处理（本机 OpenD 当时未开）→ 首次真机联调需按其实际列名收紧。
+- **回填的日记录只有收盘。** 当日 packet 里的新闻 / 日历 / 告警**无法回填** ——
+  回填记录带 `provenance.backfilled=true`，报告必须把那些字段标「无」。
 
 ## 部署
 

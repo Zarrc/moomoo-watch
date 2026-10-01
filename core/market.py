@@ -55,7 +55,7 @@ def _load_json(path):
         return None
 
 
-def _from_fixture(cfg) -> Dict[str, Any]:
+def _from_fixture(cfg, now: datetime | None = None) -> Dict[str, Any]:
     fx = cfg.path_for("fixtures")
     account = _load_json(fx / "account.json") or {}
     positions = _load_json(fx / "positions.json") or []
@@ -73,7 +73,7 @@ def _from_fixture(cfg) -> Dict[str, Any]:
         "positions": positions,
         "watchlist": watchlist,
         "klines": indicators,
-        "asof": datetime.now(CST).isoformat(timespec="seconds"),
+        "asof": (now or datetime.now(CST)).isoformat(timespec="seconds"),
         "status": {"source": "fixture", "ok": True, "detail": "离线样例数据"},
     }
 
@@ -149,7 +149,7 @@ def _find_account(cfg, host: str, port: int, market_enum):
 # ---------------------------------------------------------------------------
 # futu 源（2026-09-30 首次真机验证；Moomoo MY + 美股行情 + 模拟盘账户）
 # ---------------------------------------------------------------------------
-def _from_futu(cfg) -> Dict[str, Any]:
+def _from_futu(cfg, now: datetime | None = None) -> Dict[str, Any]:
     status: Dict[str, Any] = {"source": "futu", "ok": False, "detail": ""}
     try:
         from futu import (AuType, KLType, OpenQuoteContext, OpenSecTradeContext,
@@ -372,16 +372,17 @@ def _from_futu(cfg) -> Dict[str, Any]:
 
     return {
         "account": account, "positions": positions, "watchlist": watchlist,
-        "klines": klines, "asof": datetime.now(CST).isoformat(timespec="seconds"),
+        "klines": klines, "asof": (now or datetime.now(CST)).isoformat(timespec="seconds"),
         "status": status,
     }
 
 
 # ---------------------------------------------------------------------------
-def collect(cfg) -> Dict[str, Any]:
+def collect(cfg, now: datetime | None = None) -> Dict[str, Any]:
+    """取数。`now` 可选 —— 只影响 `asof` 时间戳（测试用可控时钟）。"""
     if cfg.source == "futu":
-        return _from_futu(cfg)
-    return _from_fixture(cfg)
+        return _from_futu(cfg, now)
+    return _from_fixture(cfg, now)
 
 
 def enrich(cfg, raw: Dict[str, Any]) -> Dict[str, Any]:

@@ -10,12 +10,16 @@
       run_brief.ps1                 # 按 config.yaml 跑（默认 brief）
       run_brief.ps1 -Trigger alert  # 高危预警模式
       run_brief.ps1 -Ask "GLD 怎么样"
+      run_brief.ps1 -Rollup         # ⑥:30 那次：简报 + 多周期回滚（日评/周/月/季/年）
+      run_brief.ps1 -Rollup -SeedFixtures   # 离线验收（播种 fixture 日记录，不接 OpenD）
 #>
 param(
     [ValidateSet('brief', 'alert', 'ask')]
     [string]$Trigger = 'brief',
     [string]$Ask = '',
-    [switch]$NoPush
+    [switch]$NoPush,
+    [switch]$Rollup,
+    [switch]$SeedFixtures
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,8 +75,10 @@ Write-Host "使用 Python: $py"
 
 # ⚠️ 不能叫 $args —— 那是 PowerShell 自动变量，赋值会直接报错
 $pyArgs = @('main.py', '--trigger', $Trigger)
-if ($Ask)    { $pyArgs += @('--ask', $Ask) }
-if ($NoPush) { $pyArgs += '--no-push' }
+if ($Ask)          { $pyArgs += @('--ask', $Ask) }
+if ($NoPush)       { $pyArgs += '--no-push' }
+if ($Rollup)       { $pyArgs += '--rollup' }
+if ($SeedFixtures) { $pyArgs += '--seed-fixtures' }
 
 & $py @pyArgs
 exit $LASTEXITCODE
