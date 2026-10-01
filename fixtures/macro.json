@@ -1,0 +1,66 @@
+{
+  "_fixture": true,
+  "_note": "样例宏观数据（合成，非真实）。_fixture:true 会被 core/macro.py 透传，子代理必须据此在任何输出里标注『样例数据』——它绝不能进真实推送。",
+  "fed_watch": {
+    "target_rate": 4.25,
+    "next_meeting": "2026-10-06",
+    "probabilities": {"hike": 0.48, "hold": 0.34, "cut": 0.18}
+  },
+  "dot_plot": {
+    "points": [
+      {"year": "2026", "rate": 4.375},
+      {"year": "2027", "rate": 3.875},
+      {"year": "2028", "rate": 3.25},
+      {"year": "longer", "rate": 3.0}
+    ]
+  },
+  "indicators": {
+    "CPI_YOY": {"value": 4.2, "period": "2026-09", "unit": "%"},
+    "CORE_CPI_YOY": {"value": 3.6, "period": "2026-09", "unit": "%"},
+    "PCE_YOY": {"value": 3.1, "period": "2026-08", "unit": "%"},
+    "UNRATE": {"value": 4.4, "period": "2026-09", "unit": "%"},
+    "NFP_CHANGE": {"value": -38.0, "period": "2026-09", "unit": "千"},
+    "FEDFUNDS_TARGET": {"value": 4.25, "period": "2026-09", "unit": "%"},
+    "US10Y": {"value": 4.72, "period": "2026-10-02", "unit": "%"},
+    "WTI_OIL": {"value": 101.3, "period": "2026-10-02", "unit": "USD"},
+    "GOLD": {"value": 4021.0, "period": "2026-10-02", "unit": "USD"}
+  },
+  "series": {
+    "CPI_YOY": [
+      {"period": "2026-04", "value": 3.4},
+      {"period": "2026-05", "value": 4.2},
+      {"period": "2026-06", "value": 4.1},
+      {"period": "2026-07", "value": 3.9},
+      {"period": "2026-08", "value": 3.9},
+      {"period": "2026-09", "value": 4.2}
+    ],
+    "FEDFUNDS_TARGET": [
+      {"period": "2026-04", "value": 3.75},
+      {"period": "2026-05", "value": 4.0},
+      {"period": "2026-06", "value": 4.25},
+      {"period": "2026-07", "value": 4.25},
+      {"period": "2026-08", "value": 4.25},
+      {"period": "2026-09", "value": 4.25}
+    ],
+    "NFP_CHANGE": [
+      {"period": "2026-06", "value": 147.0},
+      {"period": "2026-07", "value": 89.0},
+      {"period": "2026-08", "value": 22.0},
+      {"period": "2026-09", "value": -38.0}
+    ],
+    "US10Y": [
+      {"period": "2026-06", "value": 4.31},
+      {"period": "2026-07", "value": 4.45},
+      {"period": "2026-08", "value": 4.52},
+      {"period": "2026-09", "value": 4.61},
+      {"period": "2026-10-02", "value": 4.72}
+    ],
+    "GOLD": [
+      {"period": "2026-06", "value": 3712.0},
+      {"period": "2026-07", "value": 3844.0},
+      {"period": "2026-08", "value": 3960.0},
+      {"period": "2026-09", "value": 3988.0},
+      {"period": "2026-10-02", "value": 4021.0}
+    ]
+  }
+}

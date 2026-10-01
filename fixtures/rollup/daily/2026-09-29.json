@@ -1,0 +1,80 @@
+{
+  "session_date": "2026-09-29",
+  "generated_at": "2026-09-29T06:30:00+08:00",
+  "closes": {
+    "US.SPY": 645.5,
+    "US.GLD": 262.1,
+    "US.AAPL": 214.2
+  },
+  "changes_pct": {
+    "US.SPY": 0.859,
+    "US.GLD": 0.614,
+    "US.AAPL": 2.0
+  },
+  "highs": {
+    "US.SPY": 648.082,
+    "US.GLD": 263.1484,
+    "US.AAPL": 215.0568
+  },
+  "lows": {
+    "US.SPY": 642.918,
+    "US.GLD": 261.0516,
+    "US.AAPL": 213.3432
+  },
+  "account": {
+    "equity": 10000.0,
+    "currency": "USD",
+    "cash": 3120.55,
+    "market_value_by_currency": {
+      "USD": 5110.0
+    },
+    "pnl_by_currency": {
+      "USD": 210.0
+    },
+    "mixed_currency": false,
+    "totals_complete": true,
+    "position_count": 3,
+    "unquoted_position_count": 0
+  },
+  "weights": {
+    "US.GLD": 0.317,
+    "US.AAPL": 0.106,
+    "US.SPY": 0.064
+  },
+  "indicators": {
+    "US.SPY": {
+      "last_close": 645.5,
+      "ma50": 639.045
+    },
+    "US.GLD": {
+      "last_close": 262.1,
+      "ma50": 259.479
+    },
+    "US.AAPL": {
+      "last_close": 214.2,
+      "ma50": 212.058
+    }
+  },
+  "macro_actuals": [],
+  "macro_snapshot": {
+    "_fixture": true,
+    "ok": true
+  },
+  "events_ahead": [],
+  "alerts": [],
+  "news_top": [],
+  "calls": [],
+  "call_stats": {
+    "present": true,
+    "parsed": 0,
+    "rejected": [],
+    "parse_error": null
+  },
+  "scores": [],
+  "provenance": {
+    "source": "fixture",
+    "backfilled": false,
+    "degraded_fields": [],
+    "macro_fixture": true
+  }
+}

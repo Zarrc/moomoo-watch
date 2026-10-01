@@ -55,6 +55,41 @@ calendar:
   high_risk_keywords: ["CPI", "PPI", "NFP", "Nonfarm", "FOMC", "Interest Rate",
                        "GDP", "PCE", "Unemployment", "Retail Sales"]
 
+# --- 宏观数据（美联储预期 + 指标历史） ---------------------------------------
+# 主刻度 = 美联储利率预期；这是黄金/美债传导链的起点。取不到一律记「无」，绝不编。
+macro:
+  enabled: true
+  fed_watch: true         # get_fed_watch_target_rate —— 目标利率 + 加息/按兵/降息概率（主刻度）
+  dot_plot: true          # get_fed_watch_dot_plot —— 点阵图
+  # 指标白名单：多周期报告要「已公布数据的实际值」。名称须与 get_macro_indicator_list 对得上。
+  indicators: ["CPI_YOY", "CORE_CPI_YOY", "PCE_YOY", "UNRATE", "NFP_CHANGE",
+               "FEDFUNDS_TARGET", "US10Y", "WTI_OIL", "GOLD"]
+  history_periods: 24     # 每个指标往前取几期
+
+# --- 多周期回滚 + 可证伪预测台账 ---------------------------------------------
+# 把「无状态的一次性简报」变成「可回看、可打分的分级汇总」。
+# 三条铁律：数字=脚本，判断=LLM；机器记录在项目内(gitignore)，人读报告在 vault；
+#            call 必须可证伪且次日被脚本自动打分。
+rollup:
+  enabled: true
+  session_boundary_hour: 9   # +08:00 下，几点之前算「上一交易日的 session」
+  market_holidays: []        # 美股休市日，格式 "YYYY-MM-DD"（跳过这些天）
+  call_instruments: ["US.SPY", "US.GLD"]   # 预测白名单（硬约束）：须拿得到干净收盘序列
+  keep_days: 400             # 日记录保留天数
+  max_backfill_days: 10      # 日 K 回填上限
+  bootstrap_mode: "seed"     # seed = 首跑只登记水位、只出 daily（防一次触发 5 个 report）
+  max_backfill_periods: {weekly: 4, monthly: 2, quarterly: 1, yearly: 1}
+  refresh_call_same_session: false   # 同 session 重跑是否覆盖当日 call
+  periods:
+    daily: {enabled: true, push: true}
+    weekly: {enabled: true, push: true}
+    monthly: {enabled: true, push: true}
+    quarterly: {enabled: true, push: true, summary_only: true}
+    yearly: {enabled: true, push: true}
+  ledger:
+    score_deadband_pct: 0.1   # |涨跌| < 此值(%) → 判 flat，避免用噪声记对错
+    max_score_lag_days: 7     # 超过这么多天还没下一条记录 → unscored_stale（不移出分母、不静默丢）
+
 # --- 新闻 / 公告 ------------------------------------------------------------
 news:
   enabled: true
@@ -103,11 +138,14 @@ agent:
   permission_mode: "acceptEdits"   # ⚠️ 不可省：只靠 agent 文件的字段在 --agent 下写不出文件
   model: ""                        # 留空不传 --model；建议钉死一个以稳定成本
   timeout_seconds: 300
+  report_timeout_seconds: 900      # 周/月/季/年全文比日常简报长得多，单独给宽超时
 
-# --- 路径（相对本目录） ------------------------------------------------------
+# --- 路径（相对本目录，除 vault_invest） ------------------------------------
 paths:
   data: "data"            # 脚本写、子代理读
   outbox: "outbox"        # 子代理写、脚本读
   logs: "logs"
   state: "state.json"
   fixtures: "fixtures"
+  rollup: "rollup"        # 日记录 / 台账 / 命中率 / 水位（gitignore）
+  vault_invest: "Self/投资"   # ⚠️ 相对 **vault 根**（不是本目录）；报告全文的落点
