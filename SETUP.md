@@ -72,7 +72,31 @@ moomoo:
 mode: live                 # simulate → live（改完才真发推送）
 ```
 
-## 5. 先跑离线自检（**不要跳**）
+## 5. 装「大脑」：子代理定义
+
+本仓库的 Python 是「身体」；「怎么写、写什么」由子代理完成。**参考版已随仓库分发**：
+
+```bash
+# 复制进你的 Claude Code 项目（= vault 根，即含 .claude/ 的那层）
+mkdir -p "<vault 根>/.claude/agents"
+cp agents/portfolio-watch.md "<vault 根>/.claude/agents/portfolio-watch.md"
+```
+
+名字必须与 `config.yaml` 的 `agent.agent_name` 一致（默认 `portfolio-watch`）。
+
+🔧 **复制后按你的情况改这几处**（参考版里都标了 🔧）：
+
+- `<报告区>` 的落点 —— 由 `config.yaml` 的 `paths.vault_invest` 决定（默认 `Self/投资`，相对 vault 根）
+- `config.yaml` 的 `agent.claude_exe` —— 你本机 `claude` 可执行文件的**绝对路径**
+
+> 🚩 **`--permission-mode acceptEdits` 不能省**（`core/summarize.py` 已经带上它）：
+> 子代理文件里的 `permissionMode` 字段在 `--agent` 这条路径下**静默失效** ——
+> 文件照样加载、`exit 0`，但 Write 被拒，**什么都不会产出**。四条臂的实测矩阵见
+> [`agents/portfolio-watch.md`](agents/portfolio-watch.md)。
+
+> 不想用子代理 → `config.yaml` 设 `agent.enabled: false`：流水线会停在数据包，**不产生推送**。
+
+## 6. 先跑离线自检（**不要跳**）
 
 ```bash
 python main.py --source fixture --no-agent
@@ -89,7 +113,7 @@ python main.py --source futu --mode simulate # 加上子代理，但仍不真发
 python main.py --source futu --mode live     # 真发
 ```
 
-## 6. 配计划任务
+## 7. 配计划任务
 
 用 `run_brief.ps1` 包装（已处理编码与路径问题）。
 
@@ -130,7 +154,7 @@ schtasks /Create /TN "moomoo-watch 预警" /SC MINUTE /MO 30 ^
 > —— 否则首跑会同时触发 5 个周期报告（5×900s + 5 条推送，直接打爆 Server酱 5 条/天）。
 > **别把它改成其它值**，除非你清楚在做什么。
 
-## 6.5 离线验收：多周期回滚（**不接 OpenD、不接网**）
+## 7.5 离线验收：多周期回滚（**不接 OpenD、不接网**）
 
 多周期回滚（`rollup/`）整套都能离线验证 —— fixture 里**伪造了一整周**的日记录，
 所以**不用等一周**就能跑周报。
@@ -158,7 +182,7 @@ python main.py --source fixture --mode simulate --rebuild-scorecard
 > ⚠️ `--now` 是**隐藏测试钩子**（`argparse.SUPPRESS`），只为让「星期几 / 周界 / 打分」可复现；
 > 日常计划任务**不要带它**。
 
-## 7. 验证清单
+## 8. 验证清单
 
 - [ ] `telnet 127.0.0.1 11111` 能连
 - [ ] `python main.py --source fixture --no-agent` 全绿
