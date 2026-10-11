@@ -221,6 +221,12 @@ L2  周期汇总 报告全文 → Self/投资/{日评,周报,月报,季报,年�
 - 首跑保护：`rollup.bootstrap_mode: seed`（默认）→ 第一次只登记水位、只出 daily，
   否则首跑会同时触发 5 个报告（5×900s + 打爆 Server酱 5 条/天）。
 
+### Airflow（可选 · 独立仓库）
+
+另有一套 **Airflow** 版编排沙箱，在独立仓库 [Zarrc/moomoo-airflow](https://github.com/Zarrc/moomoo-airflow)：
+把这条流水线画成 DAG、在 Docker 里按依赖图跑、可 `backfill` 补历史。学习/展示用的离线 fixture 版，
+与本仓库的 Windows 部署**互不依赖**（不需要 Airflow/Docker 的用户可完全无视它）。
+
 ## 设计原则（踩过坑才写下的）
 
 **宁可留空，不要报假数字。** 所有「取不到」的情况都如实标注，绝不拿 0 或估算顶上：
