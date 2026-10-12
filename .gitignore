@@ -42,3 +42,6 @@ venv/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# 🔴 本机调度注册脚本（含机器路径，私人用）
+/_tmp/
