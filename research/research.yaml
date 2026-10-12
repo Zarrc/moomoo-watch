@@ -1,0 +1,43 @@
+# research/ —— investment-research 的取数管道配置
+#
+# 数据包契约（与 .claude/skills/research-data-sources/SKILL.md §四 一致，两处不能漂移）：
+#   13F  → data/research/13f_<YYYYQn>.json
+#   宏观 → data/research/macro.json
+# 数据源接口契约与坑位见 SKILL.md（EDGAR 的 UA/限频、13F 的 45 天窗口、FRED 序列表）。
+
+edgar:
+  # SEC Fair Access：User-Agent 必须是「名字 邮箱@域名」（2026-10-12 实踩：
+  # 仓库 URL 式 UA → 403；*@users.noreply.github.com 也 403，该模式已被 SEC 拉黑）。
+  # 真实邮箱放 .env 的 EDGAR_CONTACT_EMAIL（同 FRED_API_KEY，不进仓库）；未配置时退占位符并警告。
+  user_agent_name: "moomoo-watch research pipeline"
+  # contact_email: "you@example.com"   # 仅当不想用 .env 时才填这里（会被公开）
+
+fetch:
+  quarters_back: 2        # 每家机构取最近几个季度的 13F（供 agent 对比算 新买/加仓/减仓/清仓）
+  top_n: 50               # 每家每季保留市值前 N 大持仓（agent 只需要前十 + 交集余量）
+  fred_obs_limit: 60      # 每条 FRED 序列取最近 N 条观测
+  min_interval_sec: 0.13  # EDGAR 限频 10 req/s → 守 ~7.7 req/s
+
+# 机构名单 —— 默认值与 .claude/agents/investment-research.md 模式① 同步：
+# 纳入主动管理机构；默认排除指数巨头（Vanguard / BlackRock / State Street，
+# 被动持仓无「主动判断」信号）；Fidelity 主动被动混合，默认不纳入，想看就加行。
+institutions:
+  - {name: Berkshire Hathaway,        cik: 1067983}
+  - {name: Bridgewater Associates,    cik: 1350694}
+  - {name: Citadel Advisors,          cik: 1423053}
+  - {name: Renaissance Technologies,  cik: 1037389}
+  - {name: JPMorgan Chase,            cik: 19617}
+  - {name: Goldman Sachs Group,       cik: 886982}
+  - {name: Morgan Stanley,            cik: 895421}
+  # - {name: Fidelity (MR://混合),     cik: ...}
+
+# FRED 序列 —— 与 SKILL.md §二 的序列表同步（改这里先回那张表核对停更状态）。
+fred:
+  series:
+    - {id: UNRATE,    label: 失业率,                frequency: monthly}
+    - {id: PAYEMS,    label: 非农就业(千人),        frequency: monthly}
+    - {id: CPIAUCSL,  label: CPI 全项(指数水平),    frequency: monthly}
+    - {id: CPILFESL,  label: 核心 CPI(指数水平),    frequency: monthly}
+    - {id: FEDFUNDS,  label: 联邦基金有效利率,      frequency: monthly}
+    - {id: DTWEXBGS,  label: 美元广义名义指数,      frequency: daily}
+    - {id: DEXMAUS,   label: 林吉特/美元汇率,       frequency: daily}
