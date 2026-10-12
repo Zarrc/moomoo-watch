@@ -44,25 +44,32 @@ function Test-RealPython([string]$exe) {
     if ($exe -match '\\WindowsApps\\') { return $false }   # 商店存根，直接毙掉
     try {
         $v = & $exe --version 2>&1
+        if ("$v" -notmatch '^Python 3') {
+            Write-Warning ("Test-RealPython: {0} version output = [{1}]" -f $exe, $v)
+        }
         return ("$v" -match '^Python 3')
-    } catch { return $false }
+    } catch {
+        Write-Warning ("Test-RealPython: {0} THREW: {1}" -f $exe, $_.Exception.Message)
+        return $false
+    }
 }
 
 $py = $env:MOOMOO_WATCH_PYTHON
 if (-not (Test-RealPython $py)) {
     $py = $null
     $candidates = @()
-    foreach ($cand in @('python', 'python3', 'py')) {
-        $c = Get-Command $cand -ErrorAction SilentlyContinue
-        if ($c) { $candidates += $c.Source }
-    }
-    # 再兜几个常见安装位置（用户级 winget 装法就是第一个）
+    # 🚩 绝对路径优先（2026-10-13 实踩：计划任务上下文里 Get-Command 顺序不可靠，
+    #    周更任务首跑就栽在这；已知好路径放第一位后稳定）
     $candidates += @(
         (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'),
         (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python311\python.exe'),
         'C:\Python312\python.exe',
         'C:\Python311\python.exe'
     )
+    foreach ($cand in @('python', 'python3', 'py')) {
+        $c = Get-Command $cand -ErrorAction SilentlyContinue
+        if ($c) { $candidates += $c.Source }
+    }
     foreach ($cand in $candidates) {
         if (Test-RealPython $cand) { $py = $cand; break }
     }

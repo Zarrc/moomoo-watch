@@ -1102,6 +1102,7 @@ def run(cfg, *, packet: Optional[Dict[str, Any]] = None,
                 wm_map[period] = pk          # no-agent 也推进 daily（只为验证链路）
         save_watermark(cfg, wm_map, sess)
 
+    result["drafts"] = drafts          # 局部列表回传：漏掉这行 = main.py 收到空表、周期稿永不推送
     log.info("rollup 完成：周期 %s，草稿 %d 条", result["periods"], len(drafts))
     return result
 

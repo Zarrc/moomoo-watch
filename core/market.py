@@ -506,6 +506,10 @@ def enrich(cfg, raw: Dict[str, Any]) -> Dict[str, Any]:
     if single_ccy and equity and account["total_pnl"] is not None and account["totals_complete"]:
         account["total_pnl_pct"] = round(account["total_pnl"] / equity * 100, 3)
 
+    # 汇率换算（账户币种 → MYR 展示值）：脚本算好，子代理只读 —— 取不到就 fx=None，不编。
+    from . import fx as fx_mod
+    fx_mod.attach_display(cfg, account)
+
     status = dict(raw.get("status") or {})
     if stale_klines:
         status["stale_klines"] = stale_klines

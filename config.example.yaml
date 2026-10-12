@@ -130,6 +130,13 @@ push:
       max_per_day: 0
       env_key: "PUSHPLUS_TOKEN"
 
+# --- 汇率（账户净值 → 展示币种换算，默认 HKD→MYR） ---------------------------
+# OpenD 无汇率接口（futu 10.11.7108 实测，Forex.* 也拿不到）→ 走免费无 key 的 open.er-api.com。
+# 取不到 / enabled:false → 数据包不写 equity_myr/cash_myr，子代理只显示账户币种原文。
+fx:
+  enabled: true
+  # url: "https://open.er-api.com/v6/latest/HKD"   # 默认即此，可覆盖
+
 # --- 子代理（把数据包变成简报的那一步） --------------------------------------
 agent:
   enabled: true

@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 CST = timezone(timedelta(hours=8))
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 
 # 塞进数据包、供子代理自解释的 schema 摘要（它读不到就别猜）
 _SCHEMA = {
@@ -36,6 +36,7 @@ _SCHEMA = {
         "minutes_until": "距今分钟数，负值 = 已过去",
         "volume_ratio": "最新量 / 前 20 根均量",
         "fed_probability": "0–1 的小数（加息/按兵/降息概率）",
+        "equity_myr": "净值 × 汇率的展示换算值（脚本算好，子代理不做算术；account.fx=null=未取到汇率，_fixture=true=样例汇率）",
     },
     "calendar_fields": ["name", "at", "minutes_until", "high_risk", "country", "importance",
                         "actual", "forecast", "prior"],
