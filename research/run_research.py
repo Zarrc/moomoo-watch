@@ -113,7 +113,17 @@ def decide_modes(date: str, days: list[str], cfg: dict, forced: str | None) -> l
         modes.append("weekly")
     idx = days.index(date) if date in days else -1
     nxt = days[idx + 1] if 0 <= idx < len(days) - 1 else None
-    month_end = nxt is not None and nxt[:7] != date[:7]
+    if nxt is not None:
+        month_end = nxt[:7] != date[:7]
+    else:
+        # 无交易日历（--date 覆盖 / OpenD 离线）→ 启发式：当月最后一个工作日即月末交易日
+        import calendar as _cal
+        from datetime import timedelta as _td
+        y, m = int(date[:4]), int(date[5:7])
+        d0 = datetime(y, m, _cal.monthrange(y, m)[1])
+        while d0.weekday() >= 5:
+            d0 -= _td(days=1)
+        month_end = d0.date().isoformat() == date
     event_listed = date in [str(d)[:10] for d in cfg.get("market", {}).get("event_dates", [])]
     if month_end or event_listed:
         modes.append("event")

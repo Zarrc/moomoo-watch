@@ -70,4 +70,13 @@ market:
     code: "US.VIX"
     fallback: "US.VIXY"
   weekly_bars: 10                # 周报用的日线根数（含缓冲）
-  event_dates: []                # 手动登记的重要日子（YYYY-MM-DD，如 FOMC "2026-10-28"）；月末自动判，不用登记
+  # 重要日子登记（YYYY-MM-DD = 事件当天；反应在当天盘面，runner 次日北京早晨正好覆盖）。
+  # 2026-10-12 联网核实：FOMC 见 federalreserve.gov 官方日历；CPI 见 bls.gov/schedule/news_release/cpi。
+  # ⚠️ 过了 2027-01 记得回来续新一年（或删旧加新）。
+  event_dates:
+    - "2026-10-14"   # CPI（9月数据）08:30 ET
+    - "2026-10-28"   # FOMC 议息 + SEP 点阵图 14:00 ET —— 本季最重
+    - "2026-11-10"   # CPI（10月数据）08:30 ET
+    - "2026-12-09"   # FOMC 年内最后一次议息 14:00 ET
+    - "2026-12-10"   # CPI（11月数据）08:30 ET（背靠背，注意与上一条会连两天事件报告）
+    - "2027-01-13"   # CPI（12月数据）08:30 ET
