@@ -41,3 +41,33 @@ fred:
     - {id: FEDFUNDS,  label: 联邦基金有效利率,      frequency: monthly}
     - {id: DTWEXBGS,  label: 美元广义名义指数,      frequency: daily}
     - {id: DEXMAUS,   label: 林吉特/美元汇率,       frequency: daily}
+
+# 市场观察（run_research.py 生产线）—— OpenD 取行情、按 ET 时段切盘前/常规/盘后。
+market:
+  opend_host: "127.0.0.1"
+  opend_port: 11111
+  sessions:                      # America/New_York 本地钟
+    premarket:  ["04:00", "09:30"]
+    regular:    ["09:30", "16:00"]
+    postmarket: ["16:00", "20:00"]
+  symbols:                       # 大盘 + 11 板块 ETF + 半导体
+    - {code: "US.SPY",  label: 标普500 ETF}
+    - {code: "US.QQQ",  label: 纳指100 ETF}
+    - {code: "US.DIA",  label: 道指 ETF}
+    - {code: "US.SOXX", label: 半导体}
+    - {code: "US.XLK",  label: 科技}
+    - {code: "US.XLF",  label: 金融}
+    - {code: "US.XLE",  label: 能源}
+    - {code: "US.XLV",  label: 医疗}
+    - {code: "US.XLY",  label: 可选消费}
+    - {code: "US.XLP",  label: 必需消费}
+    - {code: "US.XLI",  label: 工业}
+    - {code: "US.XLU",  label: 公用事业}
+    - {code: "US.XLB",  label: 材料}
+    - {code: "US.XLC",  label: 通信}
+    - {code: "US.XLRE", label: 房地产}
+  vix:                           # 情绪锚：优先 VIX 指数本体，取不到退 ETN 代理（报告须标口径）
+    code: "US.VIX"
+    fallback: "US.VIXY"
+  weekly_bars: 10                # 周报用的日线根数（含缓冲）
+  event_dates: []                # 手动登记的重要日子（YYYY-MM-DD，如 FOMC "2026-10-28"）；月末自动判，不用登记

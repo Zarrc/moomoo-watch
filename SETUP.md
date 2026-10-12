@@ -141,6 +141,10 @@ schtasks /Create /TN "moomoo-watch 简报+回滚" /SC DAILY /ST 06:30 ^
 schtasks /Create /TN "moomoo-watch 预警" /SC MINUTE /MO 30 ^
   /TR "powershell -NoProfile -ExecutionPolicy Bypass -File \"<本仓库的绝对路径>\run_brief.ps1\" -Trigger alert" ^
   /F
+# 市场观察（可选，研究线）：每天 09:10，runner 自动判断日报/周报/事件报告
+schtasks /Create /TN "moomoo-watch 市场观察" /SC DAILY /ST 09:10 ^
+  /TR "powershell -NoProfile -ExecutionPolicy Bypass -File \"<本仓库的绝对路径>\run_research.ps1\"" ^
+  /F
 ```
 
 > 把 `<本仓库的绝对路径>` 换成实际路径（在仓库目录里跑 `pwd` 或 `cd` 后看地址栏）。

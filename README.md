@@ -229,10 +229,11 @@ L2  周期汇总 报告全文 → Self/投资/{日评,周报,月报,季报,年�
 
 ### research/（可选 · 机构持仓与宏观取数）
 
-[`research/`](research/README.md) 是独立于守望管道的可选模块：从 **SEC EDGAR（13F 机构持仓）**
-与 **FRED（宏观序列）** 取数，落盘 `data/research/` 供研究类 agent 解读。纯标准库 + PyYAML、
-不碰 `main.py`/`core/`，密钥走 `.env`（`FRED_API_KEY` / `EDGAR_CONTACT_EMAIL`）。实测坑与数据包契约
-见 `research/README.md`。
+[`research/`](research/README.md) 是独立于守望管道的可选模块，两条线：
+① **研究线**——SEC EDGAR（13F 机构持仓）+ FRED（宏观）取数；② **市场观察线**——`run_research.py`
+每天 09:10 (+08) 自动判上一美股交易日，盘前/常规/盘后三段行情（OpenD）→ 自动调研究 agent 出
+日报/周报/事件报告。纯标准库 + PyYAML + futu-api（既有依赖），不碰 `main.py`/`core/`，
+密钥走 `.env`（`FRED_API_KEY` / `EDGAR_CONTACT_EMAIL`）。实测坑与数据包契约见 `research/README.md`。
 
 ## 设计原则（踩过坑才写下的）
 

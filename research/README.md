@@ -10,7 +10,15 @@
 python research/fetch_research.py all     # 13F + 宏观，一次全量
 python research/fetch_research.py 13f     # 只刷 SEC 13F 机构持仓
 python research/fetch_research.py macro   # 只刷 FRED 宏观序列
+python research/fetch_market.py --probe   # 探测 OpenD / 板块代码 / VIX 可用性
+python research/run_research.py --dry-run # 市场观察线：看今天会产出哪些报告
+python research/run_research.py           # 市场观察线：真跑（计划任务每天 09:10 (+08) 调的也是它）
 ```
+
+**市场观察线**（`run_research.py` = 调度大脑）：每交易日 09:10 (+08) 自动判上一美股交易日 →
+盘前/常规/盘后三段行情包（`fetch_market.py`，OpenD + extended_time）→ headless 调
+`investment-research` 子代理出日报；周五加周报、月末/登记事件日加事件报告。
+OpenD 不可达时市场线跳过（退出码 1），宏观照刷。
 
 **产物**（`data/research/`，已被 `.gitignore` 的 `data/` 覆盖，不进仓库）：
 
@@ -19,6 +27,8 @@ python research/fetch_research.py macro   # 只刷 FRED 宏观序列
 | `13f_<YYYYQn>.json` | 各机构该季 13F 持仓（每家带 filing date、市值前 N、占组合 %） |
 | `macro.json` | FRED 七条序列 + 派生指标（CPI 同比、失业率方向、非农 6 月净增…） |
 | `.state.json` | 增量水位（accession 未变不重复下载 infotable） |
+| `market_<日期>.json` | 交易日三段行情（15 标的 + VIX + movers，`fetch_market.py` 写） |
+| `market_week_<日期>.json` | 周度板块聚合（5 日日线 + ranking） |
 
 包内均带 `_schema` 自描述字段——消费方（agent）「读不到 schema 就停」依赖它。
 
