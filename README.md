@@ -30,9 +30,14 @@
 
 程序通过 `claude --agent <名字>` 调起一个子代理来完成「怎么写、写什么」这部分。
 
-**本仓库带一份参考版**：[`agents/portfolio-watch.md`](agents/portfolio-watch.md)
-—— 那是可直接用（也可直接改）的子代理定义，含数据包契约、四种模式
-（`brief` / `alert` / `ask` / `report`）、候选筛选规则与硬性护栏。**把它当模板读，别当黑箱用。**
+**本仓库带两份参考版**：
+
+- [`agents/portfolio-watch.md`](agents/portfolio-watch.md) —— 持仓守望（默认大脑）：数据包契约、
+  四种模式（`brief` / `alert` / `ask` / `report`）、候选筛选规则与硬性护栏。
+  **把它当模板读，别当黑箱用。**
+- [`agents/investment-research.md`](agents/investment-research.md) —— 研究沙盘（可选第二大脑）：
+  七模式（13F 机构扫描 / 重复度候选 / 投资时钟 / 巴菲特审视 / 市场观察×3），
+  配套 [`research/`](research/README.md) 取数管道与 `run_research.ps1` 自动线。
 
 - **装它**：复制到你的 Claude Code 项目（一般是 vault 根，即含 `.claude/` 的那层）的
   `.claude/agents/portfolio-watch.md`；名字要与 `config.yaml` 的 `agent.agent_name` 一致。
