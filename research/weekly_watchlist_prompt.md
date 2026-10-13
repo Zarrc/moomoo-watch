@@ -4,7 +4,7 @@
 
 ## 步骤
 
-1. 读 `Self/To-do's/project/moomoo-watch/data/research/` 下的 `13f_*.json`
+1. 读 `Self/01 To-do's/project/Agents/moomoo-watch/data/research/` 下的 `13f_*.json`
    （每包顶层有 `quarter` / `filed_count` / `data_asof`；取数脚本刚跑过，盘上即最新）。
 2. 判断有没有**比 `config.yaml` 热门股段注释里登记的季度更新的、且 `filed_count ≥ 1` 的季度包**。
    - 没有（新季度 0 家已交 = 窗口开着但没人交）→ **不改自选**，只写日志一条「无新申报」，结束。
@@ -16,7 +16,7 @@
    - 排除：当前持仓（O / NVDA / JPM / AVGO / MY.5296 / MY.1155）与已在自选的标的；
    - issuer 名 → 行情代码映射**保守**：只加确定在美交所交易的普通股（如 ALPHABET→US.GOOGL），
      ETF/期权/ADR 不确定的一律不加。宁缺毋滥。
-4. 改 `Self/To-do's/project/moomoo-watch/config.yaml` 的 `moomoo.watchlist`：
+4. 改 `Self/01 To-do's/project/Agents/moomoo-watch/config.yaml` 的 `moomoo.watchlist`：
    - **永不动前三只**（US.GLD / US.SPY / US.AAPL）；
    - 只改「热门股」注释段及以下（保持 3–5 只），每只一行注释：依据（哪家机构、什么方向、哪个季度）；
    - 段首注释更新日期与数据季度。

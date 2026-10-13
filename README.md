@@ -32,12 +32,12 @@
 
 **本仓库带两份参考版**：
 
-- [`agents/portfolio-watch.md`](agents/portfolio-watch.md) —— 持仓守望（默认大脑）：数据包契约、
+- [`agents/portfolio-watch.md`](portfolio-watch.md) —— 持仓守望（默认大脑）：数据包契约、
   四种模式（`brief` / `alert` / `ask` / `report`）、候选筛选规则与硬性护栏。
   **把它当模板读，别当黑箱用。**
-- [`agents/investment-research.md`](agents/investment-research.md) —— 研究沙盘（可选第二大脑）：
+- [`agents/investment-research.md`](investment-research.md) —— 研究沙盘（可选第二大脑）：
   七模式（13F 机构扫描 / 重复度候选 / 投资时钟 / 巴菲特审视 / 市场观察×3），
-  配套 [`research/`](research/README.md) 取数管道与 `run_research.ps1` 自动线。
+  配套 [`research/`](Self/01%20To-do's/project/Agents/moomoo-watch/research/README.md) 取数管道与 `run_research.ps1` 自动线。
 
 - **装它**：复制到你的 Claude Code 项目（一般是 vault 根，即含 `.claude/` 的那层）的
   `.claude/agents/portfolio-watch.md`；名字要与 `config.yaml` 的 `agent.agent_name` 一致。
@@ -234,7 +234,7 @@ L2  周期汇总 报告全文 → Self/投资/{日评,周报,月报,季报,年�
 
 ### research/（可选 · 机构持仓与宏观取数）
 
-[`research/`](research/README.md) 是独立于守望管道的可选模块，两条线：
+[`research/`](Self/01%20To-do's/project/Agents/moomoo-watch/research/README.md) 是独立于守望管道的可选模块，两条线：
 ① **研究线**——SEC EDGAR（13F 机构持仓）+ FRED（宏观）取数；② **市场观察线**——`run_research.py`
 每天 09:10 (+08) 自动判上一美股交易日，盘前/常规/盘后三段行情（OpenD）→ 自动调研究 agent 出
 日报/周报/事件报告。纯标准库 + PyYAML + futu-api（既有依赖），不碰 `main.py`/`core/`，

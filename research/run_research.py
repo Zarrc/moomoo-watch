@@ -91,9 +91,9 @@ def invoke_agent(mode: str, date: str, extra: str = "") -> None:
     prompt = (
         f"模式：market_{mode}（{MODE_TITLE[mode]}）。今天 {datetime.now().strftime('%Y-%m-%d')}，"
         f"目标交易日 {date}。\n"
-        f"数据包（vault 根为工作目录，只读）：Self/To-do's/project/moomoo-watch/data/research/"
+        f"数据包（vault 根为工作目录，只读）：Self/01 To-do's/project/Agents/moomoo-watch/data/research/"
         f"{'market_week_' + date + '.json' if mode == 'weekly' else 'market_' + date + '.json'}"
-        + (f" 与 Self/To-do's/project/moomoo-watch/data/research/macro.json" if mode == "event" else "")
+        + (f" 与 Self/01 To-do's/project/Agents/moomoo-watch/data/research/macro.json" if mode == "event" else "")
         + f"。\n"
         f"输出文件（固定）：Self/投资/研究/market/{MODE_DIR[mode]}/{date} {MODE_TITLE[mode]}.md\n"
         f"{extra}"

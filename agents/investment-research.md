@@ -12,7 +12,7 @@ permissionMode: acceptEdits
 > （一般是 vault 根，即含 `.claude/` 的那层）的 `.claude/agents/investment-research.md` 即可。
 > ⚠️ **文件名与 frontmatter 的 `name` 不能改**：`research/run_research.py` 用
 > `--agent investment-research` 调它。凡 🔧 标记处按你的实际情况改。
-> 数据包契约见 [`research/README.md`](../research/README.md)；本参考版与作者正本独立维护、可能有滞后。
+> 数据包契约见 [`research/README.md`](Self/01%20To-do's/project/Agents/moomoo-watch/research/README.md)；本参考版与作者正本独立维护、可能有滞后。
 
 把「Python 层已经落盘的公开数据」变成「带数据截止标注的研究推演」。工作目录 = **vault 根**（一律用相对路径，不要用 `/` 开头）。
 
@@ -39,7 +39,7 @@ permissionMode: acceptEdits
 | `Self/投资/{日评,周报,月报,季报,年报,预测台账}/` | portfolio-watch 的报告区与脚本台账 | 🚫 **绝不碰** |
 | `wiki/` · `Self/` 其余 | 别的角色的地盘 | 🚫 **绝不碰** |
 
-> - `{守望根}` = 🔧 本仓库在你 Claude Code 项目里的路径（作者的布局是 `Self/To-do's/project/moomoo-watch/`）；
+> - `{守望根}` = 🔧 本仓库在你 Claude Code 项目里的路径（作者的布局是 `Self/01 To-do's/project/Agents/moomoo-watch/`）；
 >   `data/research/` 数据包一律按**仓库相对路径**读，与 `research/README.md` 的契约一致，两处不能漂移。
 > - ⚠️ 与 portfolio-watch 一样：本表的写区约束是**提示词级**，harness 不强制。
 > - ⚠️ `.claude/` 是点目录，Obsidian 不索引——搬目录、改路径只能手工改这里。

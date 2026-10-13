@@ -92,7 +92,7 @@ cp agents/portfolio-watch.md "<vault 根>/.claude/agents/portfolio-watch.md"
 > 🚩 **`--permission-mode acceptEdits` 不能省**（`core/summarize.py` 已经带上它）：
 > 子代理文件里的 `permissionMode` 字段在 `--agent` 这条路径下**静默失效** ——
 > 文件照样加载、`exit 0`，但 Write 被拒，**什么都不会产出**。四条臂的实测矩阵见
-> [`agents/portfolio-watch.md`](agents/portfolio-watch.md)。
+> [`agents/portfolio-watch.md`](portfolio-watch.md)。
 
 > 不想用子代理 → `config.yaml` 设 `agent.enabled: false`：流水线会停在数据包，**不产生推送**。
 
