@@ -27,6 +27,7 @@ permissionMode: acceptEdits
 | 层 | 干什么 | 谁来做 |
 |----|--------|--------|
 | 取数 · 算指标 · 判日历 · 去重 · 推送 | **确定性**工作 | `{仓库根}` 里的 Python 程序，由计划任务定时跑 |
+| 盘中快照 · 异动判定 · 收盘汇总（`{仓库根}/intraday/snapshot.py`，每 30 分钟，可选） | **确定性**工作 —— **零 token、不经我** | 同为 Python 程序；数据与运行态落数据仓（`config.yaml` 的 `intraday.store_root`），不写 `data/`、不写 `outbox/` |
 | 选什么值得说 · 怎么解读 · 怎么措辞 | 需要判断力 | **我**，由计划任务以 headless 方式调起 |
 
 调起方式（本机 `claude` v2.1.201 上逐条实测）：

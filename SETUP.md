@@ -117,12 +117,14 @@ python main.py --source futu --mode live     # 真发
 
 用 `run_brief.ps1` 包装（已处理编码与路径问题）。
 
-**任务只有两个**（这正是「单一入口」的设计：让程序自己判断该出什么，而不是堆任务）：
+**核心任务只有两个**（这正是「单一入口」的设计：让程序自己判断该出什么，而不是堆任务）。
+另有**可选盘中线**（零 token）：开了它可替代「高危预警」，盘中完全不调子代理。
 
 | 任务 | 频率 | 命令 | 干什么 |
 |------|------|------|--------|
 | **主任务** | 每天 **06:30** | `run_brief.ps1 -Rollup` | 常规简报 **+ 多周期回滚**（日评 / 周报 / 月报 / 季报 / 年报，由水位自动判定） |
-| **高危预警** | 每 30 分钟 | `run_brief.ps1 -Trigger alert` | 只在事件窗口内报（日限额 + 冷却兜底） |
+| **高危预警** | 每 30 分钟 | `run_brief.ps1 -Trigger alert` | 只在事件窗口内报（日限额 + 冷却兜底）；⚠️ **每轮都调一次子代理**，介意 token 改用盘中线替代 |
+| **盘中快照**（可选） | 每 30 分钟 | `python intraday/snapshot.py` | 记数据 + 阈值异动推送 + 收盘汇总，**零 token**（架构见该脚本头部注释） |
 
 > ⏰ **为什么主任务选 06:30（+08:00）**：此刻**上一美股交易日的收盘已定**（美股 16:00 ET ≈ 次日 04:00–05:00 +08:00），
 > 距当晚 21:30 开盘还有约 15h —— 是「数据完整 + 时间充裕」的唯一窗口。
@@ -145,10 +147,25 @@ schtasks /Create /TN "moomoo-watch 预警" /SC MINUTE /MO 30 ^
 schtasks /Create /TN "moomoo-watch 市场观察" /SC DAILY /ST 09:10 ^
   /TR "powershell -NoProfile -ExecutionPolicy Bypass -File \"<本仓库的绝对路径>\run_research.ps1\"" ^
   /F
+
+# 盘中线（可选，零 token）：盘中快照每 30 分钟 —— 直接调 Python（脚本按 __file__ 自定位，无需 ps1 包装）
+#   先在 config.yaml 的 intraday.* 配好数据仓根（store_root）与阈值；交易窗口判定在脚本内（美东时区）
+schtasks /Create /TN "moomoo-watch 盘中快照" /SC MINUTE /MO 30 ^
+  /TR "\"<Python 绝对路径>\" \"<本仓库的绝对路径>\intraday\snapshot.py\"" ^
+  /F
+
+# 盘中线（可选）：每周六 09:00 周更入库（当日 xlsx → history.db，幂等可重跑）
+schtasks /Create /TN "moomoo-watch 周更入库" /SC WEEKLY /D SAT /ST 09:00 ^
+  /TR "\"<Python 绝对路径>\" \"<本仓库的绝对路径>\intraday\etl_weekly.py\"" ^
+  /F
 ```
 
 > 把 `<本仓库的绝对路径>` 换成实际路径（在仓库目录里跑 `pwd` 或 `cd` 后看地址栏）。
 > 计划任务**只接受绝对路径**，这是 Windows 的限制，绕不开。
+>
+> 🚩 **日后改路径（`schtasks /Change /TR`）必须保住引号**：仓库路径含空格/撇号（如 `To-do's`）时，
+> 漏引号会让 powershell `-File` 在第一个空格处截断 —— 任务「成功调度」但脚本从未启动，退出码怪异且不报错
+> （实测踩坑：静默停摆 11 天才发现）。批量注册/改路径建议改用 `Register-ScheduledTask`（参数对象化，天然引号安全）。
 
 > 🚩 **关键约束：任务必须设为「只在用户登录时运行」。**
 > 因为 OpenD 需要你交互式登录，且登录态会掉。选「不管用户是否登录都要运行」反而会失败。
@@ -190,7 +207,7 @@ python main.py --source fixture --mode simulate --rebuild-scorecard
 
 - [ ] `telnet 127.0.0.1 11111` 能连
 - [ ] `python main.py --source fixture --no-agent` 全绿
-- [ ] `python -m unittest discover -s tests` 全绿（27 个用例）
+- [ ] `python -m unittest discover -s tests` 全绿（46 个用例）
 - [ ] `python main.py --source fixture --no-agent --rollup --seed-fixtures --now "2026-10-03T06:30:00+08:00"` 出 `data/report_2026-W40.json`
 - [ ] `python main.py --source futu --no-agent` 里 `data/latest.json` 的持仓与你 App 里一致
 - [ ] `.env` 里的 SendKey 正确，且 `mode: live` 时手机真收到一条

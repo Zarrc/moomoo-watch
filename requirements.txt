@@ -6,3 +6,7 @@ futu-api>=10.11
 pandas>=2.0
 PyYAML>=6.0
 requests>=2.31
+# 盘中快照（intraday/snapshot.py）：xlsx 追加写；IANA 时区库
+# （Windows 没有系统 tz 数据，zoneinfo 靠 tzdata 包兜底，缺了 ET 时区判窗会炸）
+openpyxl>=3.1
+tzdata>=2024.1

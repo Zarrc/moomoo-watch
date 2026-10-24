@@ -130,6 +130,19 @@ push:
       max_per_day: 0
       env_key: "PUSHPLUS_TOKEN"
 
+# --- 盘中快照（零 token 线：记数据、判异动、收盘汇总，全程无 LLM） -------------
+intraday:
+  enabled: true
+  store_root: "D:/Data/Stocks"  # ← 你的数据仓根（占位）；当日 xlsx 与 history.db 都落这里
+  window:                       # v1 不记夜盘：窗口 = 美东持续交易 + 盘后
+    tz: "America/New_York"
+    start: "09:30"
+    end: "20:00"
+  thresholds:                   # 异动 = |change_pct| ≥ 阈值（绝对涨跌幅，不分多空方向）
+    positions_pct: 3.0          # 持仓组
+    watchlist_pct: 5.0          # 自选组
+  eod_summary: true             # 窗口结束后第一跳推当日汇总
+
 # --- 汇率（账户净值 → 展示币种换算，默认 HKD→MYR） ---------------------------
 # OpenD 无汇率接口（futu 10.11.7108 实测，Forex.* 也拿不到）→ 走免费无 key 的 open.er-api.com。
 # 取不到 / enabled:false → 数据包不写 equity_myr/cash_myr，子代理只显示账户币种原文。
