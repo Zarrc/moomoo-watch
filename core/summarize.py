@@ -158,16 +158,40 @@ def run(cfg, *, trigger: str = "brief", question: str | None = None,
 
     started = datetime.now(CST)
     log.info("调起子代理：%s（trigger=%s，超时 %ss）", agent, trigger, timeout)
+
+    # stdout/stderr 必须走文件、不能走管道（capture_output）。
+    # 根因（2026-10-31 起 report 模式 3/3 静默死亡，logs/watch.log 可查）：
+    #   claude CLI 运行时会派生孙进程（工具执行进程），孙进程继承 stdout 管道句柄；
+    #   run(timeout=) 超时 kill 主进程后还要把管道排干（communicate）——
+    #   孙进程还握着管道 → communicate() 永久阻塞 → 整个 Python 进程挂死、
+    #   日志静默终止（连超时日志都留不下）。文件重定向没有「排干」这个死法；
+    #   配合超时后 `taskkill /T` 杀整棵进程树（Windows；本仓只在 Windows 跑）。
+    logs_dir = cfg.path_for("logs", create=True)
+    stamp = started.strftime("%Y%m%d_%H%M%S")
+    out_file = logs_dir / f"agent-{stamp}-{trigger}.out"
+    err_file = logs_dir / f"agent-{stamp}-{trigger}.err"
     try:
-        proc = subprocess.run(cmd, cwd=str(vault_root), capture_output=True,
-                              text=True, encoding="utf-8", errors="replace", timeout=timeout)
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "draft": None, "error": f"子代理超时（{timeout}s）"}
+        with out_file.open("wb") as fo, err_file.open("wb") as fe:
+            proc = subprocess.Popen(cmd, cwd=str(vault_root), stdout=fo, stderr=fe,
+                                    stdin=subprocess.DEVNULL)
+            try:
+                proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                               capture_output=True)
+                try:
+                    proc.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    log.warning("taskkill 后 wait(30s) 仍超时，不再等待，走失败路径")
+                tail = err_file.read_text(encoding="utf-8",
+                                          errors="replace").strip().splitlines()[-3:]
+                return {"ok": False, "draft": None,
+                        "error": f"子代理超时（{timeout}s），进程树已击杀：{' / '.join(tail)}"}
     except OSError as exc:
         return {"ok": False, "draft": None, "error": f"子代理启动失败：{exc}"}
 
     if proc.returncode != 0:
-        tail = (proc.stderr or "").strip().splitlines()[-3:]
+        tail = err_file.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-3:]
         return {"ok": False, "draft": None,
                 "error": f"子代理 exit={proc.returncode}：{' / '.join(tail)}"}
 
@@ -182,6 +206,12 @@ def run(cfg, *, trigger: str = "brief", question: str | None = None,
         return {"ok": False, "draft": None, "error": f"推送稿读取失败：{exc}"}
 
     draft["file"] = str(draft_file)
+    # 成功即清理子进程输出文件（失败路径保留 .out/.err，stderr tail 排障用）
+    try:
+        out_file.unlink(missing_ok=True)
+        err_file.unlink(missing_ok=True)
+    except OSError:
+        pass
     log.info("子代理产出：%s（send=%s, priority=%s）", draft_file.name, draft["send"], draft["priority"])
     return {"ok": True, "draft": draft, "error": None,
             "period": period if is_report else None,
